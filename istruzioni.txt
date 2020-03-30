@@ -1,0 +1,142 @@
+
+---- Modificare Hist_v3 e usare dispatcher&observers per fare un ciclo sugli eventi ----
+
+**** Parte A ****
+
+***
+Scaricare i pacchetti "Utilities" e istallarli da qualche parte, quindi
+aggiungere il percorso corrispondente nella compilazione:
+cd ..../corsocxx
+tar -xzf util.tgz
+c++ -I ..../corsocxx
+
+***
+In "AnalysisSteering.h" rimuovere la dichiarazione della funzione process.
+
+***
+In "EventDump.h,cc" e "ParticleMass.h,cc":
+- includere l'header dell'Observer:
+#include "util/include/ActiveObserver.h"
+- ereditare da "ActiveObserver<Event>" in aggiunta alla base esistente,
+- rinominare la funzione "process" in "update".
+
+***
+In "EventSource.h,cc":
+- dichiarare la funzione "get" come "private",
+- dichiarare e implementare un funzione "public" "run",
+- spostare il ciclo sugli eventi dalla funzione "main" alla nuova funzione
+  "run" e usare "Dispatcher<Event>::notify" nel ciclo sugli eventi.
+
+***
+Creare una classe "ParticleReco" per calcolare l'energia totale e la massa invariante:
+- dichiararla per ereditare dal template "Singleton" nella cartella util,
+- dichiararla per ereditare dal template "LazyObserver",
+- dichiarare 3 variabili membro private per le proprietà del decadimento
+    tipo di decadimento (un enum),
+    energia totale,
+    massa invariante,
+- calcolare queste variabili nella funzione "update", usare il codice 
+  precedentemente nella funzione globale "mass",
+- dichiarare e implementare funzioni per verificare i nuovi eventi e 
+  restituire le proprietà del decadimento.
+
+***
+In "MassMean.cc" e "ParticleMass.cc" prendere la massa invariante da
+"ParticleReco" prendendo la sua istanza e chiamare la funzione che
+restituisce la massa invariante.
+
+***
+In "ParticleMass.cc" chiamare l'istogramma come "mass" seguito dal nome
+dato al primo parametro nella funzione "pCreate".
+
+***
+Modificare la funzione "main" e sostituire il ciclo sugli eventi con una
+chiamata alla funzione "run" in "EventSource".
+
+**** Part B ****
+
+***
+Aggiungere una nuova quantità "lightVelocity" in Constants.h,cc e settarla
+come 0.029979246 cm/ps
+
+***
+Duplicare le classi seguenti:
+ParticleReco -> ProperTime
+MassMean     -> LifetimeFit
+ParticleMass -> ParticleLifetime
+Questo può essere fatto facilmente usando il comando
+..../util/class/cloneClass XXX YYY
+dove XXX è la classe esistente (e.g. ParticleReco)
+and  YYY è la classe nuova     (e.g. ProperTime)
+
+***
+In "ProperTime.h" dichiarare una variabile membro "time" e una funzione
+"decayTime" che la restituisce dopo aver verificato il nuovo evento.
+In "ProperTime.cc" nella funzione "update" calcolare il tempo di decadimento
+proprio dalla distanza "d" del punto di decadimento dall'origine usando la 
+formula                   t = d*m/(p*c)
+dove "m" è la massa invariante, "c" è la velocità della luce e "p" il momento
+dato a sua volta da       p = sqrt(e^2-m^2)
+dove "e" è l'energia totale; trovare la massa invriante e l'energia totale
+da "ParticleReco".
+
+***
+In "LifetimeFit.h" dichiarare le stesse variabili membro e funzioni come in
+"MassMean", ma rimuovere le variabili membro che tengono somme, media e rms
+e le funzioni che le restituiscono; lasciare le variabile membro per tenere
+il minimo e massimo della massa e il numero di eventi più la funzione che
+restituisce l'ultimo numero.
+In "LifetimeFit.cc" nella funzione "add" semplicemente controllare se la massa
+invariante è all'interno del range e aggiornare il numero di eventi accettati
+in accordo; la funzione "compute" può essere lasciata vuota.
+
+***
+In "ParticleLifetime.h" sostituire il pointer a "MassMean" con un pointer
+a "LifetimeFit" nella struttura "Particle" e aggiungere due parametri 
+aggiuntivi "timeMin" e "timeMax" per la funzione "pCreate", per i tempi 
+propri di decadimento minimo e massimo.
+In "ParticleLifetime.cc" nella funzione "beginJob" chiamare "pCreate" con
+gli stessi argomenti come in "ParticleMass", più il tempo minimo e massimo
+(usare come range 10.0-500.0 e 10-1000.0); nella funzione "endJob" lasciare
+le stesse operazioni come in "ParticleMass" tranne le scritture di media e
+rms (lasciare la chiamata alla funzione "compute", che non fa nulla per ora,
+sarà implementata nella prossima versione); prendere dall'oggetto
+"AnalysisInfo" il nome del file ROOT di output.
+Nella funzione "pCreate" chiamare l'istogramma come "time" seguito dal nome
+dato come primo parametro nella funzione "pCreate" e usaer il minimo e il
+massimo tempo di decadimento come range.
+Nella funzione "update" chiamare la funzione "add" dell'oggetto "LifetimeFit",
+e riempire l'istogramma in accordo con il risultato (usare la stessa logica
+usata in "ParticleMass").
+
+**** opzionale ****
+
+Salvare gli istogrammi per la massa e per il tempo di decadimento nello stesso
+file ROOT; usare un TFileProxy (nel pacchetto "util") per gestire accessi
+multipli agli stessi file ROOT nella stessa esecuzione.
+
+********* lista finale delle funzioni *********
+
+main                   modify Hist_v3 or copy braggPlot_v4
+
+********* final list of classes   *********
+
+                       .h                            .cc
+AnalysisFactory        copy   Hist_v3                copy   Hist_v3
+AnalysisSteering       modify Hist_v3                copy   Hist_v3
+AnalysisInfo           copy   Hist_v3                copy   Hist_v3
+SourceFactory          copy   Hist_v3                copy   Hist_v3
+Event                  copy   Hist_v3                copy   Hist_v3
+EventSource            modify Hist_v3                modify Hist_v3
+EventReadFromFile      copy   Hist_v3                copy   Hist_v3
+EventSim               copy   Hist_v3                copy   Hist_v3
+EventDump              modify Hist_v3                modify Hist_v3
+ParticleMass           modify Hist_v3                modify Hist_v3
+MassMean               copy   Hist_v3                modify Hist_v3
+Constants              modify Hist_v3                modify Hist_v3
+Utilities              copy   Hist_v3                copy   Hist_v3
+ParticleReco           to complete                   to complete
+ProperTime             to do                         to do
+LifetimeFit            to do                         to do
+ParticleLifetime       to do                         to do
+
