@@ -12,8 +12,6 @@ struct Constants {
     const double massK0        =    0.497611;
     const double massLambda0   =    1.115683;
     const double lightVelocity = 0.029979246;
-    
-
 };
 
 #endif

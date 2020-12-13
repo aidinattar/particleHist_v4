@@ -41,7 +41,8 @@ class ParticleLifetime: public AnalysisSteering,
   // set of masses for different particles
   std::vector<Particle*> pList;
 
-  void pCreate( const std::string& name, 
+  void pCreate( const std::string& name,
+                float      min, float      max, 
                 double timeMin, double timeMax );
 
 };

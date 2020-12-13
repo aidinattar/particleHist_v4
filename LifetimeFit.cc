@@ -5,6 +5,7 @@
 #include "LifetimeFit.h"
 #include "Event.h"
 #include "ParticleReco.h"
+#include "ProperTime.h"
 
 #include <cmath>
 
@@ -34,7 +35,6 @@ bool LifetimeFit::add( const Event& ev ) {
   ++nEvt;
 
   return true;
-
 }
 
 

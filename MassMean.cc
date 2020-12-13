@@ -39,7 +39,6 @@ bool MassMean::add( const Event& ev ) {
   sqr += Mass * Mass;
 
   return true;
-
 }
 
 

@@ -104,7 +104,6 @@ void ParticleReco::update( const Event& ev ) {
   }
 
   return;
-
 }
 
 
